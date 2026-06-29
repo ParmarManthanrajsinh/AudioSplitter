@@ -1,0 +1,56 @@
+<rml>
+<head>
+    <title>Audio Splitter</title>
+    <link type="text/rcss" href="Main.rcss"/>
+</head>
+<body>
+    <div id="shell">
+        <div id="app">
+            <div class="header">
+                <div>
+                    <h1>Audio Splitter</h1>
+                    <p>Duplicate audio to two devices.</p>
+                </div>
+                <div class="status-pill">
+                    <span id="status-dot"></span>
+                    <strong id="status-text">Stopped</strong>
+                </div>
+            </div>
+
+            <div class="device-list">
+                <div class="field">
+                    <label>Source (apps play here)</label>
+                    <select id="device-source">
+                        <option value="">No output devices found</option>
+                    </select>
+                    <p class="hint">Set this device as default Windows playback output.</p>
+                </div>
+
+                <div class="field">
+                    <label>Output 1</label>
+                    <select id="device-one">
+                        <option value="">No output devices found</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Output 2</label>
+                    <select id="device-two">
+                        <option value="">No output devices found</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="refresh-button" class="secondary">Refresh</button>
+                <button id="stop-button" class="secondary">Stop</button>
+                <button id="start-button" class="primary">Start</button>
+            </div>
+
+            <div class="footer">
+                <span>Select source and two output devices</span>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

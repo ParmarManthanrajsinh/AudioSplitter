@@ -1,0 +1,218 @@
+/* Apple Native UI style */
+body {
+    font-family: "LatoLatin";
+    font-size: 14px;
+    color: #ffffff;
+    background-color: #1e1e1e;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+div, h1, p, label, .field, .device-list, .actions, .footer, selectbox, option {
+    display: block;
+}
+
+#shell {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: #1e1e1e;
+}
+
+#app {
+    display: block;
+    width: auto;
+    height: 100%;
+    padding: 30px 30px;
+    background-color: #1e1e1e;
+}
+
+.header {
+    display: block;
+    height: 60px;
+    margin-bottom: 30px;
+}
+
+.header > div:first-child {
+    display: block;
+    float: left;
+}
+
+h1 {
+    font-size: 28px;
+    color: #ffffff;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+p {
+    font-size: 13px;
+    color: #98989d;
+}
+
+.status-pill {
+    display: inline-block;
+    float: right;
+    background-color: #2c2c2e;
+    border-radius: 14px;
+    padding: 6px 12px;
+    height: 16px;
+    margin-top: 10px;
+}
+
+#status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #98989d;
+    border-radius: 4px;
+    margin-right: 6px;
+    margin-top: 1px;
+}
+#status-dot.running { background-color: #30d158; }
+#status-dot.stopped { background-color: #ff9f0a; }
+#status-dot.error { background-color: #ff453a; }
+#status-dot.info { background-color: #0a84ff; }
+
+#status-text {
+    display: inline-block;
+    font-size: 12px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.device-list {
+    display: block;
+    margin-bottom: 30px;
+}
+
+.field {
+    display: block;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    font-size: 12px;
+    color: #98989d;
+    margin-bottom: 6px;
+    margin-left: 4px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.hint {
+    font-size: 11px;
+    color: #0a84ff;
+    margin-top: 8px;
+    margin-left: 4px;
+}
+
+select {
+    display: block;
+    width: 100%;
+    height: 44px;
+    background-color: #2c2c2e;
+    border-radius: 8px;
+    color: #ffffff;
+    border-width: 0px;
+}
+
+select:hover {
+    background-color: #3a3a3c;
+}
+
+select selectvalue {
+    display: block;
+    height: 44px;
+    line-height: 44px;
+    padding-left: 14px;
+    font-size: 14px;
+}
+
+select selectarrow {
+    display: block;
+    float: right;
+    width: 30px;
+    height: 44px;
+}
+
+select selectarrow:hover {
+    background-color: #48484a;
+    border-radius: 0 8px 8px 0;
+}
+
+select selectbox {
+    display: block;
+    background-color: #1c1c1e;
+    border: 1px #3a3a3c;
+    border-radius: 8px;
+    overflow-y: auto;
+    max-height: 200px;
+    margin-top: 4px;
+}
+
+option {
+    display: block;
+    padding: 10px 14px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+option:hover {
+    background-color: #0a84ff;
+    color: #ffffff;
+}
+
+.actions {
+    display: block;
+    margin-top: 30px;
+    text-align: right;
+}
+
+button {
+    display: inline-block;
+    height: 36px;
+    line-height: 36px;
+    background-color: #2c2c2e;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: bold;
+    width: auto;
+    padding: 0 20px;
+    text-align: center;
+    border-width: 0px;
+    margin-left: 10px;
+}
+
+button:hover {
+    background-color: #3a3a3c;
+}
+
+button:active {
+    background-color: #48484a;
+}
+
+button.primary {
+    background-color: #0a84ff;
+}
+
+button.primary:hover {
+    background-color: #0070e0;
+}
+
+button.primary:active {
+    background-color: #0060c0;
+}
+
+.footer {
+    display: block;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px #2c2c2e;
+    color: #8e8e93;
+    font-size: 12px;
+    text-align: center;
+}
