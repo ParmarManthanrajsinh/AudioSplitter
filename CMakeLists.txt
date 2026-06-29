@@ -15,6 +15,7 @@ if(WIN32 AND EXISTS "C:/msys64/ucrt64")
   set(MSYS2_UCRT64_BIN "C:/msys64/ucrt64/bin")
 endif()
 
+# ── RmlUi options ──────────────────────────────────────────────────
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(RMLUI_SHELL OFF CACHE BOOL "" FORCE)
 set(RMLUI_BACKEND Win32_GL2 CACHE STRING "" FORCE)
@@ -24,6 +25,7 @@ set(RMLUI_PRECOMPILED_HEADERS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(ThirdParty/RmlUi)
 
+# ── Executable ─────────────────────────────────────────────────────
 add_executable(AudioSplitter WIN32
     Source/Main.cpp
     Source/App/Application.cpp
@@ -52,12 +54,22 @@ if(WIN32)
   target_link_libraries(AudioSplitter PRIVATE imm32)
 endif()
 
+# ── Compiler / linker flags ────────────────────────────────────────
 if(MSVC)
   target_compile_options(AudioSplitter PRIVATE /W4 /permissive-)
 else()
   target_compile_options(AudioSplitter PRIVATE -Wall -Wextra -Wpedantic)
+
+  # Static-link the C++ runtime so we don't need to ship 15 DLLs.
+  target_link_options(AudioSplitter PRIVATE -static-libgcc -static-libstdc++ -static)
+
+  # Release: strip all symbols → exe drops from ~94 MB to ~3-5 MB.
+  if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+    target_link_options(AudioSplitter PRIVATE -s)
+  endif()
 endif()
 
+# ── Copy assets ────────────────────────────────────────────────────
 add_custom_target(CopyAssets ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${CMAKE_SOURCE_DIR}/Assets
@@ -66,35 +78,3 @@ add_custom_target(CopyAssets ALL
 )
 add_dependencies(AudioSplitter CopyAssets)
 
-if(WIN32 AND DEFINED MSYS2_UCRT64_BIN)
-  set(AUDIOSPLITTER_RUNTIME_DLLS
-        libbrotlicommon.dll
-        libbrotlidec.dll
-        libbz2-1.dll
-        libfreetype-6.dll
-        libgcc_s_seh-1.dll
-        libglib-2.0-0.dll
-        libgraphite2.dll
-        libharfbuzz-0.dll
-        libiconv-2.dll
-        libintl-8.dll
-        libpcre2-8-0.dll
-        libpng16-16.dll
-        libstdc++-6.dll
-        libwinpthread-1.dll
-        zlib1.dll
-    )
-
-  foreach(RuntimeDll IN LISTS AUDIOSPLITTER_RUNTIME_DLLS)
-    if(EXISTS "${MSYS2_UCRT64_BIN}/${RuntimeDll}")
-      add_custom_command(
-                TARGET AudioSplitter
-                POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${MSYS2_UCRT64_BIN}/${RuntimeDll}"
-                        "$<TARGET_FILE_DIR:AudioSplitter>/${RuntimeDll}"
-                COMMENT "Copying ${RuntimeDll}"
-            )
-    endif()
-  endforeach()
-endif()

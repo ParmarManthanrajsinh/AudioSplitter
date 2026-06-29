@@ -14,20 +14,37 @@ The project is structured into four main components:
 
 This project adheres to the **Unreal Engine Coding Standard**. The codebase uses PascalCase, `F` / `U` prefixes for classes, `b` prefixes for booleans, and Allman-style bracing. A `.clang-format` file is provided to automatically enforce these rules.
 
+## Prerequisites
+
+* **OS**: Windows 10+ (tested on Windows 11)
+* **Toolchain**: MSYS2 UCRT64 (`c++`, `gcc`, `cmake`, `ninja`)
+* **Libraries**: `freetype` (installed via `pacman -S mingw-w64-ucrt-x86_64-freetype`)
+* **CMake**: 3.20+
+
 ## Building
 
-This project requires a C++20 compiler and CMake. It is tested on Windows 11 with the MSYS2 UCRT64 toolchain.
+The build system statically links the C++ runtime, so no external DLLs are needed. The release binary is stripped to ~5 MB.
 
-### Debug Build
+### Configure + Build (Debug)
 ```bash
-cmake -B build/debug -DCMAKE_BUILD_TYPE=Debug
+cmake -B build/debug -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe \
+      -DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/c++.exe
 cmake --build build/debug
 ```
 
-### Release Build
+### Configure + Build (Release)
 ```bash
-cmake -B build/release -DCMAKE_BUILD_TYPE=Release
+cmake -B build/release -G Ninja -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe \
+      -DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/c++.exe
 cmake --build build/release
 ```
 
-After building, the executable and required UI assets can be found in the respective `build/debug` or `build/release` directory.
+### Clean Rebuild
+```bash
+cmake --build build/debug --clean-first
+cmake --build build/release --clean-first
+```
+
+After building, the executable and `Assets/` folder are in the respective `build/debug` or `build/release` directory. The release binary is a single self-contained `.exe` — no DLLs required.

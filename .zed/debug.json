@@ -7,7 +7,9 @@
     "label": "Debug native binary",
     "build": {
       "command": "cmake",
-      "args": ["--build", "build/debug"],
+      "args": [
+        "--build", "build/debug"
+      ],
       "cwd": "$ZED_WORKTREE_ROOT"
     },
     "program": "$ZED_WORKTREE_ROOT/build/debug/AudioSplitter.exe",
@@ -18,7 +20,35 @@
     "label": "Release native binary",
     "build": {
       "command": "cmake",
-      "args": ["--build", "build/release"],
+      "args": [
+        "--build", "build/release"
+      ],
+      "cwd": "$ZED_WORKTREE_ROOT"
+    },
+    "program": "$ZED_WORKTREE_ROOT/build/release/AudioSplitter.exe",
+    "request": "launch",
+    "adapter": "CodeLLDB"
+  },
+  {
+    "label": "Clean Debug Build",
+    "build": {
+      "command": "cmake",
+      "args": [
+        "--build", "build/debug", "--clean-first"
+      ],
+      "cwd": "$ZED_WORKTREE_ROOT"
+    },
+    "program": "$ZED_WORKTREE_ROOT/build/debug/AudioSplitter.exe",
+    "request": "launch",
+    "adapter": "CodeLLDB"
+  },
+  {
+    "label": "Clean Release Build",
+    "build": {
+      "command": "cmake",
+      "args": [
+        "--build", "build/release", "--clean-first"
+      ],
       "cwd": "$ZED_WORKTREE_ROOT"
     },
     "program": "$ZED_WORKTREE_ROOT/build/release/AudioSplitter.exe",
