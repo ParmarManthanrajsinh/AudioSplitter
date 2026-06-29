@@ -136,11 +136,7 @@ if(RMLUI_SHELL)
 	add_subdirectory("Backends")
 endif()
 
-add_subdirectory("Samples")
 
-if(RMLUI_TESTS)
-	add_subdirectory("Tests")
-endif()
 
 # Add an interface library to include all sub-libraries.
 # RMLUI_CMAKE_MINIMUM_VERSION_RAISE_NOTICE:

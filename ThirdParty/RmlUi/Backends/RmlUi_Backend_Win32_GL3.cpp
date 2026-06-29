@@ -103,21 +103,19 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 	RMLUI_ASSERT(!data);
 
 	const std::wstring name = RmlWin32::ConvertToUTF16(Rml::String(window_name));
-
-	data = Rml::MakeUnique<BackendData>();
-
-	data->instance_handle = GetModuleHandle(nullptr);
-	data->instance_name = name;
+	HINSTANCE instance_handle = GetModuleHandle(nullptr);
 
 	InitializeDpiSupport();
 
 	// Initialize the window but don't show it yet.
-	HWND window_handle = InitializeWindow(data->instance_handle, name, width, height, allow_resize);
+	HWND window_handle = InitializeWindow(instance_handle, name, width, height, allow_resize);
 	if (!window_handle)
 		return false;
 
+	HDC device_context;
+	HGLRC render_context;
 	// Attach the OpenGL context.
-	if (!AttachToNative(window_handle, data->device_context, data->render_context))
+	if (!AttachToNative(window_handle, device_context, render_context))
 	{
 		::CloseWindow(window_handle);
 		return false;
@@ -130,7 +128,19 @@ bool Backend::Initialize(const char* window_name, int width, int height, bool al
 		return false;
 	}
 
+	data = Rml::MakeUnique<BackendData>();
+	if (!data || !data->render_interface)
+	{
+		::CloseWindow(window_handle);
+		return false;
+	}
+
+	data->instance_handle = instance_handle;
+	data->instance_name = name;
+	data->device_context = device_context;
+	data->render_context = render_context;
 	data->window_handle = window_handle;
+	
 	data->system_interface.SetWindow(window_handle);
 	data->system_interface.LogMessage(Rml::Log::LT_INFO, renderer_message);
 
@@ -250,7 +260,9 @@ void Backend::PresentFrame()
 // Local event handler for window and input events.
 static LRESULT CALLBACK WindowProcedureHandler(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param)
 {
-	RMLUI_ASSERT(data);
+	// During CreateWindowEx, messages arrive before BackendData is constructed.
+	if (!data)
+		return DefWindowProc(window_handle, message, w_param, l_param);
 
 	switch (message)
 	{
@@ -326,7 +338,7 @@ static HWND InitializeWindow(HINSTANCE instance_handle, const std::wstring& name
 	window_class.cbClsExtra = 0;
 	window_class.cbWndExtra = 0;
 	window_class.hInstance = instance_handle;
-	window_class.hIcon = LoadIcon(nullptr, IDI_WINLOGO);
+	window_class.hIcon = LoadIcon(instance_handle, MAKEINTRESOURCE(101));
 	window_class.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	window_class.hbrBackground = nullptr;
 	window_class.lpszMenuName = nullptr;
@@ -429,6 +441,31 @@ static bool AttachToNative(HWND window_handle, HDC& out_device_context, HGLRC& o
 	{
 		Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to make rendering context current");
 		return false;
+	}
+
+	typedef HGLRC (WINAPI * PFNWGLCREATECONTEXTATTRIBSARBPROC) (HDC hDC, HGLRC hShareContext, const int *attribList);
+	#define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
+	#define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
+	#define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
+	#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
+
+	PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+	if (wglCreateContextAttribsARB)
+	{
+		int attribs[] = {
+			WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+			WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+			0
+		};
+		HGLRC core_context = wglCreateContextAttribsARB(device_context, 0, attribs);
+		if (core_context)
+		{
+			wglMakeCurrent(nullptr, nullptr);
+			wglDeleteContext(render_context);
+			wglMakeCurrent(device_context, core_context);
+			render_context = core_context;
+		}
 	}
 
 	out_device_context = device_context;

@@ -29,6 +29,7 @@ add_executable(AudioSplitter WIN32
     Source/App/Application.cpp
     Source/Audio/AudioManager.cpp
     Source/Platform/Window.cpp
+    Source/Platform/Resource.rc
     Source/UI/UIManager.cpp
     ThirdParty/RmlUi/Backends/RmlUi_Platform_Win32.cpp
     ThirdParty/RmlUi/Backends/RmlUi_Renderer_GL3.cpp
@@ -61,9 +62,6 @@ add_custom_target(CopyAssets ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${CMAKE_SOURCE_DIR}/Assets
             $<TARGET_FILE_DIR:AudioSplitter>/Assets
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_SOURCE_DIR}/ThirdParty/RmlUi/Samples/assets/LatoLatin-Regular.ttf
-            $<TARGET_FILE_DIR:AudioSplitter>/Assets/Fonts/LatoLatin-Regular.ttf
     COMMENT "Copying assets to output directory"
 )
 add_dependencies(AudioSplitter CopyAssets)
