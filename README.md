@@ -4,6 +4,10 @@
 
 Hey there! Welcome to Audio Splitter, a super lightweight, minimal C++ app that lets you route a single audio stream to two output devices at the same time. We designed it with a modern, premium UI (think slick mobile app design) right on your desktop!
 
+## The Story Behind It 📖
+
+The idea for Audio Splitter came about when a friend and I were trying to watch a movie together on my PC. We both wanted to use our own headphones (one wired, one AirPods) so we wouldn't disturb anyone else. To our surprise, we discovered that Windows natively only allows you to output audio to a single device at a time! Thus, Audio Splitter was born to solve this exact problem—making it easy to share audio across multiple devices simultaneously.
+
 ## What makes it tick? ⚙️
 
 The project is split into four neat pieces:
