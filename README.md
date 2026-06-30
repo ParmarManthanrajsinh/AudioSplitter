@@ -1,5 +1,7 @@
 # Audio Splitter 🎧
 
+![App Screenshot](output.png)
+
 Hey there! Welcome to Audio Splitter, a super lightweight, minimal C++ app that lets you route a single audio stream to two output devices at the same time. We designed it with a modern, premium UI (think slick mobile app design) right on your desktop!
 
 ## What makes it tick? ⚙️
