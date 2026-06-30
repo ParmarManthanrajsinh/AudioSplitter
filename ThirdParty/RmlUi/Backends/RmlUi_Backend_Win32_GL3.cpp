@@ -449,7 +449,7 @@ static bool AttachToNative(HWND window_handle, HDC& out_device_context, HGLRC& o
 	#define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
 	#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
 
-	PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+	PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)(void*)wglGetProcAddress("wglCreateContextAttribsARB");
 	if (wglCreateContextAttribsARB)
 	{
 		int attribs[] = {

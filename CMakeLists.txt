@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
-
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 project(AudioSplitter
     VERSION 0.1.0
-    LANGUAGES CXX
+    LANGUAGES C CXX
 )
 
 set(CMAKE_CXX_STANDARD 20)
@@ -14,6 +14,16 @@ if(WIN32 AND EXISTS "C:/msys64/ucrt64")
   list(APPEND CMAKE_PREFIX_PATH "C:/msys64/ucrt64")
   set(MSYS2_UCRT64_BIN "C:/msys64/ucrt64/bin")
 endif()
+
+# ── Freetype ───────────────────────────────────────────────────────
+set(FT_DISABLE_ZLIB ON CACHE BOOL "Disable Zlib" FORCE)
+set(FT_DISABLE_BZIP2 ON CACHE BOOL "Disable Bzip2" FORCE)
+set(FT_DISABLE_PNG ON CACHE BOOL "Disable PNG" FORCE)
+set(FT_DISABLE_HARFBUZZ ON CACHE BOOL "Disable HarfBuzz" FORCE)
+set(FT_DISABLE_BROTLI ON CACHE BOOL "Disable Brotli" FORCE)
+
+add_subdirectory(ThirdParty/Freetype)
+add_library(Freetype::Freetype ALIAS freetype)
 
 # ── RmlUi options ──────────────────────────────────────────────────
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
