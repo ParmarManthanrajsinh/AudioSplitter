@@ -8,6 +8,7 @@
 static constexpr ma_uint32 SAMPLE_RATE = 48000;
 static constexpr ma_uint32 CHANNELS = 2;
 static constexpr ma_uint32 FRAME_SIZE = CHANNELS * sizeof(float);
+static constexpr ma_uint32 PERIOD_MS = 25;
 static constexpr ma_uint32 TARGET_FRAMES = SAMPLE_RATE / 20; // 2400 = 50ms
 static constexpr ma_uint32 BUFFER_CAPACITY = TARGET_FRAMES * 4; // 9600 = 200ms
 static constexpr ma_uint32 HIGH_WATERMARK = TARGET_FRAMES * 3; // 7200 = 150ms
@@ -36,38 +37,61 @@ FAudioManager::~FAudioManager()
     }
 }
 
+static bool EndsWith(std::string_view Str, std::string_view Suffix)
+{
+    return Str.size() >= Suffix.size() &&
+           Str.compare(Str.size() - Suffix.size(), Suffix.size(), Suffix) == 0;
+}
+
 std::vector<FAudioDevice> FAudioManager::EnumerateDevices() const
 {
     std::vector<FAudioDevice> Devices;
     if (!Context)
         return Devices;
 
-    ma_device_info* pPlaybackDeviceInfos;
-    ma_uint32 playbackDeviceCount;
+    ma_device_info* pPlaybackInfos;
+    ma_uint32 playbackCount;
+    ma_device_info* pCaptureInfos;
+    ma_uint32 captureCount;
 
-    if (ma_context_get_devices(Context, &pPlaybackDeviceInfos, &playbackDeviceCount, nullptr, nullptr) != MA_SUCCESS)
+    if (ma_context_get_devices(Context, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) != MA_SUCCESS)
     {
         std::cerr << "Failed to retrieve audio devices.\n";
         return Devices;
     }
 
-    for (ma_uint32 i = 0; i < playbackDeviceCount; ++i)
+    for (ma_uint32 i = 0; i < playbackCount; ++i)
     {
-        bool bExists = false;
-        for (const auto& D : Devices)
+        FAudioDevice Device;
+        Device.Id = pPlaybackInfos[i].name;
+        Device.Name = pPlaybackInfos[i].name;
+        Device.bIsMonitor = false;
+        Devices.push_back(Device);
+    }
+
+    static constexpr std::string_view MonitorSuffix = ".monitor";
+    for (ma_uint32 i = 0; i < captureCount; ++i)
+    {
+        std::string_view PaName = pCaptureInfos[i].id.pulse;
+        if (EndsWith(PaName, MonitorSuffix))
         {
-            if (D.Id == pPlaybackDeviceInfos[i].name)
+            bool bExists = false;
+            for (const auto& D : Devices)
             {
-                bExists = true;
-                break;
+                if (D.Id == pCaptureInfos[i].name)
+                {
+                    bExists = true;
+                    break;
+                }
             }
-        }
-        if (!bExists)
-        {
-            FAudioDevice Device;
-            Device.Id = pPlaybackDeviceInfos[i].name;
-            Device.Name = pPlaybackDeviceInfos[i].name;
-            Devices.push_back(Device);
+            if (!bExists)
+            {
+                FAudioDevice Device;
+                Device.Id = pCaptureInfos[i].name;
+                Device.Name = pCaptureInfos[i].name;
+                Device.bIsMonitor = true;
+                Devices.push_back(Device);
+            }
         }
     }
 
@@ -116,23 +140,47 @@ bool FAudioManager::Start(std::string_view SourceId, std::string_view Dest1Id, s
         return false;
     }
 
-    ma_device_info* pInfos;
-    ma_uint32 count;
-    if (ma_context_get_devices(Context, &pInfos, &count, nullptr, nullptr) != MA_SUCCESS)
+    ma_device_info* pPlaybackInfos;
+    ma_uint32 playbackCount;
+    ma_device_info* pCaptureInfos;
+    ma_uint32 captureCount;
+    if (ma_context_get_devices(Context, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) != MA_SUCCESS)
         return false;
 
     ma_device_id* pSourceDevId = nullptr;
     ma_device_id* pDest1DevId = nullptr;
     ma_device_id* pDest2DevId = nullptr;
+    bool bSourceIsMonitor = false;
 
-    for (ma_uint32 i = 0; i < count; ++i)
+    static constexpr std::string_view MonitorSuffix = ".monitor";
+    for (ma_uint32 i = 0; i < captureCount; ++i)
     {
-        if (pInfos[i].name == SourceId)
-            pSourceDevId = &pInfos[i].id;
-        if (bUseDest1 && pInfos[i].name == Dest1Id)
-            pDest1DevId = &pInfos[i].id;
-        if (bUseDest2 && pInfos[i].name == Dest2Id)
-            pDest2DevId = &pInfos[i].id;
+        if (pCaptureInfos[i].name == SourceId && EndsWith(pCaptureInfos[i].id.pulse, MonitorSuffix))
+        {
+            pSourceDevId = &pCaptureInfos[i].id;
+            bSourceIsMonitor = true;
+            break;
+        }
+    }
+
+    if (!pSourceDevId)
+    {
+        for (ma_uint32 i = 0; i < playbackCount; ++i)
+        {
+            if (pPlaybackInfos[i].name == SourceId)
+            {
+                pSourceDevId = &pPlaybackInfos[i].id;
+                break;
+            }
+        }
+    }
+
+    for (ma_uint32 i = 0; i < playbackCount; ++i)
+    {
+        if (bUseDest1 && pPlaybackInfos[i].name == Dest1Id)
+            pDest1DevId = &pPlaybackInfos[i].id;
+        if (bUseDest2 && pPlaybackInfos[i].name == Dest2Id)
+            pDest2DevId = &pPlaybackInfos[i].id;
     }
 
     if (!pSourceDevId)
@@ -171,21 +219,21 @@ bool FAudioManager::Start(std::string_view SourceId, std::string_view Dest1Id, s
         }
     }
 
-    // Loopback capture from source device
-    ma_device_config CaptureConfig = ma_device_config_init(ma_device_type_loopback);
+    // Capture from source device (loopback on Windows, monitor source on Linux)
+    ma_device_config CaptureConfig = ma_device_config_init(
+        bSourceIsMonitor ? ma_device_type_capture : ma_device_type_loopback);
     CaptureConfig.capture.pDeviceID = pSourceDevId;
     CaptureConfig.capture.format = ma_format_f32;
     CaptureConfig.capture.channels = CHANNELS;
     CaptureConfig.sampleRate = SAMPLE_RATE;
     CaptureConfig.dataCallback = CaptureDataCallback;
     CaptureConfig.pUserData = this;
-    CaptureConfig.periodSizeInMilliseconds = 10;
-    CaptureConfig.wasapi.usage = ma_wasapi_usage_pro_audio;
+    CaptureConfig.periodSizeInMilliseconds = PERIOD_MS;
 
     CaptureDevice = new ma_device{};
     if (ma_device_init(Context, &CaptureConfig, CaptureDevice) != MA_SUCCESS)
     {
-        std::cerr << "Failed to init loopback capture.\n";
+        std::cerr << "Failed to init capture.\n";
         delete CaptureDevice;
         CaptureDevice = nullptr;
         Stop();
@@ -201,7 +249,7 @@ bool FAudioManager::Start(std::string_view SourceId, std::string_view Dest1Id, s
         PB1.sampleRate = SAMPLE_RATE;
         PB1.dataCallback = PlaybackDataCallback1;
         PB1.pUserData = this;
-        PB1.periodSizeInMilliseconds = 10;
+        PB1.periodSizeInMilliseconds = PERIOD_MS;
         PB1.wasapi.usage = ma_wasapi_usage_pro_audio;
 
         PlaybackDevice1 = new ma_device{};
@@ -225,7 +273,7 @@ bool FAudioManager::Start(std::string_view SourceId, std::string_view Dest1Id, s
         PB2.sampleRate = SAMPLE_RATE;
         PB2.dataCallback = PlaybackDataCallback2;
         PB2.pUserData = this;
-        PB2.periodSizeInMilliseconds = 10;
+        PB2.periodSizeInMilliseconds = PERIOD_MS;
         PB2.wasapi.usage = ma_wasapi_usage_pro_audio;
 
         PlaybackDevice2 = new ma_device{};

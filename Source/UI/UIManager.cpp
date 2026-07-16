@@ -115,29 +115,29 @@ bool FUIManager::Initialize(int WindowWidth, int WindowHeight)
     return true;
 }
 
-void FUIManager::SetDevices(const std::vector<FAudioDevice>& Devices)
+void FUIManager::SetDevices(const std::vector<FAudioDevice>& SourceDevices, const std::vector<FAudioDevice>& OutputDevices)
 {
-    CachedDevices = Devices;
+    CachedDevices = SourceDevices;
 
     if (Document == nullptr)
     {
         return;
     }
 
-    auto PopulateSelect = [&](const char* ElementId, bool bAddNone)
+    auto PopulateSelect = [&](const char* ElementId, const std::vector<FAudioDevice>& Items, bool bAddNone)
     {
         if (auto* Select = rmlui_dynamic_cast<Rml::ElementFormControlSelect*>(Document->GetElementById(ElementId)))
         {
             Select->RemoveAll();
-            if (Devices.empty())
+            if (Items.empty())
             {
-                Select->Add("No output devices found", "");
+                Select->Add("No devices found", "");
             }
             else
             {
                 if (bAddNone)
                     Select->Add("None", "none");
-                for (const FAudioDevice& Device : Devices)
+                for (const FAudioDevice& Device : Items)
                 {
                     Select->Add(Device.Name, Device.Id);
                 }
@@ -145,9 +145,9 @@ void FUIManager::SetDevices(const std::vector<FAudioDevice>& Devices)
         }
     };
 
-    PopulateSelect("device-source", false);
-    PopulateSelect("device-one", true);
-    PopulateSelect("device-two", true);
+    PopulateSelect("device-source", SourceDevices, false);
+    PopulateSelect("device-one", OutputDevices, true);
+    PopulateSelect("device-two", OutputDevices, true);
 }
 
 void FUIManager::SetStatus(const std::string& StatusText)

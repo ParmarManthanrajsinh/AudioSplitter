@@ -10,6 +10,7 @@ struct FAudioDevice
 {
     std::string Id;
     std::string Name;
+    bool bIsMonitor = false; // PulseAudio monitor source (Linux loopback equivalent)
 };
 
 class FAudioManager

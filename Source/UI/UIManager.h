@@ -22,7 +22,7 @@ public:
     ~FUIManager();
 
     bool Initialize(int WindowWidth, int WindowHeight);
-    void SetDevices(const std::vector<FAudioDevice>& Devices);
+    void SetDevices(const std::vector<FAudioDevice>& SourceDevices, const std::vector<FAudioDevice>& OutputDevices);
     void SetStatus(const std::string& StatusText);
     void Update();
     void Render();

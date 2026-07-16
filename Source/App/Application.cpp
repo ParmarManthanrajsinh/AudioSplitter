@@ -21,7 +21,22 @@ bool FApplication::Initialize()
         return false;
     }
 
-    UIManager.SetDevices(AudioManager.EnumerateDevices());
+    {
+        auto AllDevices = AudioManager.EnumerateDevices();
+        std::vector<FAudioDevice> SourceDevices;
+        std::vector<FAudioDevice> OutputDevices;
+        for (const auto& D : AllDevices)
+        {
+            if (D.bIsMonitor)
+                SourceDevices.push_back(D);
+            else
+                OutputDevices.push_back(D);
+        }
+        // On Windows (no monitor sources), show all devices as source options
+        if (SourceDevices.empty())
+            SourceDevices = AllDevices;
+        UIManager.SetDevices(SourceDevices, OutputDevices);
+    }
     UIManager.SetStatus("Stopped");
 
     UIManager.OnStartClicked = [this]()
@@ -49,7 +64,19 @@ bool FApplication::Initialize()
     UIManager.OnRefreshClicked = [this]()
     {
         AudioManager.Stop();
-        UIManager.SetDevices(AudioManager.EnumerateDevices());
+        auto AllDevices = AudioManager.EnumerateDevices();
+        std::vector<FAudioDevice> SourceDevices;
+        std::vector<FAudioDevice> OutputDevices;
+        for (const auto& D : AllDevices)
+        {
+            if (D.bIsMonitor)
+                SourceDevices.push_back(D);
+            else
+                OutputDevices.push_back(D);
+        }
+        if (SourceDevices.empty())
+            SourceDevices = AllDevices;
+        UIManager.SetDevices(SourceDevices, OutputDevices);
         UIManager.SetStatus("Device list refreshed");
     };
 
