@@ -55,6 +55,7 @@ skills-lock.json
 *.swo
 *.suo
 *.user
+*.AppImage
 
 # OS generated files
 .DS_Store
